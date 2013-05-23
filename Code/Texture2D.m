@@ -10,7 +10,7 @@ classdef Texture2D < Material
         function obj = Texture2D(id, fileName, scale)
             obj             = obj@Material(id, 'texture2D');
             obj.fileName    = fileName;
-            obj.TextureImg  = imread(fileName); % assume file exists
+            obj.TextureImg  = double(imread(fileName)); % assume file exists
             obj.nX          = size(obj.TextureImg,2);
             obj.nY          = size(obj.TextureImg,1);
             obj.scale       = scale;
