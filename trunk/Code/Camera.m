@@ -1,4 +1,4 @@
-classdef Camera
+classdef Camera < handle
     % The class Camera provides a container for different camera models, 
     % e.g. a perspective camera or spherical camera model.
     %
@@ -18,26 +18,35 @@ classdef Camera
         vPx         % Pixels in vertical domain.
         t0          % Minimum ray length.
         t1          % Maximum ray length.
+        aaCoef      % Anti-aliasing coefficient.
+        AaX         % Anti-aliasing horizontal offset to ScreenX.
+        AaY         % Anti-aliasing vertical offset to ScreenY.
+        nAa         % Number of anti-aliasing samples.
     end
     methods
         % Constructor.
-        function obj = Camera(id,typeName)
+        function obj = Camera(id,typeName,aaCoef)
             obj.id          = id;
             obj.typeName    = typeName;
+            obj.aaCoef      = aaCoef;
         end
         % Move the camera to the new position Pos.
-        function obj = moveTo(obj,Pos)
-            obj.Pos     = Pos;
+        function moveTo(obj,Pos)
+            obj.Pos = Pos;
         end
         % Move the camera from its current position by Shift.
-        function obj = moveBy(obj,Shift)
-            obj.Pos     = obj.Pos + Shift;
+        function moveBy(obj,Shift)
+            obj.Pos = obj.Pos + Shift;
         end
         % Rotate the camera.
-        function obj = rotate(obj,Rotation)
+        function rotate(obj,Rotation)
             M       = rotationMatrix(Rotation);
             obj.Dir = M*obj.Dir;
             obj.Up  = M*obj.Up;
+        end
+        function orient(obj,Dir,Up)
+            obj.Dir = Dir;
+            obj.Up  = Up;
         end
     end
 end
