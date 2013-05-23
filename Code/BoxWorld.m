@@ -6,8 +6,9 @@ close all
 TITLE_SIZE = 18;
 
 % *************************************************************************
-% A simple box world to test the ray-tracer.
-%   Florian Raudies, 05/22/2013, Boston University.
+% A simple box world to test the ray-tracer. The camera moves on a circular
+% track.
+%   Florian Raudies, 05/23/2013, Boston University.
 % *************************************************************************
 
 % *************************************************************************
@@ -41,8 +42,8 @@ aaCoef  = 5; % Anti-aliasing with the Fibonacci number of aaCoef samples.
 scene       = Scene;
 GroundPlane = Plane(1,1,[-w/2; 0; +l/2],[-w/2; 0; -l/2],[+w/2; 0; -l/2]);
 LeftWall    = Plane(2,3,[-w/2; 0; +l/2],[-w/2; h; +l/2],[-w/2; h; -l/2]);
-RightWall   = Plane(3,2,[+w/2; 0; +l/2],[+w/2; h; +l/2],[+w/2; h; -l/2]);
-TopWall     = Plane(4,2,[-w/2; 0; +l/2],[-w/2; h; +l/2],[+w/2; h; +l/2]);
+RightWall   = Plane(3,2,[+w/2; 0; +l/2],[+w/2; 0; -l/2],[+w/2; h; -l/2]);
+TopWall     = Plane(4,2,[-w/2; 0; +l/2],[+w/2; 0; +l/2],[+w/2; h; +l/2]);
 DownWall    = Plane(5,2,[-w/2; 0; -l/2],[-w/2; h; -l/2],[+w/2; h; -l/2]);
 % Add primitives.
 scene.addObject(GroundPlane);
@@ -54,8 +55,13 @@ scene.addObject(DownWall);
 scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3));
 scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2));
 scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2));
-scene.addCamera(PinholeCamera(1,Dir,Up,Pos,hFov,vFov,hPx,vPx,aaCoef,[0 10^3]));
+% Add pinhole camera.
+scene.addCamera(PinholeCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
+                                hFov,vFov,hPx,vPx,aaCoef,[0 10^3]));
+% Add light sources.
+scene.addLight(Light(1,[80; 100; 0; 0],[50 20 210],[1 0.5 .5],[1 1 1],10^3));
 scene.initialize();
+% scene.rotateCamera(1,[0 pi/4 0]);
 
 figure;
 for iStep = 1:nStep,
@@ -75,7 +81,7 @@ for iStep = 1:nStep,
         colormap(flipud(gray));
         title('Depth map (zBuffer)','FontSize',TITLE_SIZE);
     subplot(1,2,2);
-        image(Img/255); axis off square;
+        image(Img/max(Img(:))); axis off square;
         title(sprintf('Image %d x %d pixels',hPx,vPx),'FontSize',TITLE_SIZE);
     drawnow;
 end

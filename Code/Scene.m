@@ -104,6 +104,9 @@ classdef Scene < handle
             Z   = zeros(nPx, 1);
             Img = zeros(nPx, 3);
             for iAa = 1:nAa,
+                % *********************************************************
+                % Ray-triangle intersection.
+                % *********************************************************
                 Xd  = camera.ScreenX + camera.AaX(iAa);
                 Yd  = camera.ScreenY + camera.AaY(iAa);
                 X_D = Right(1)*Xd + Right(2)*Yd + Right(3)*Zd;
@@ -132,12 +135,13 @@ classdef Scene < handle
                 AK_JB   = A.*K - J.*B;
                 JC_AL   = J.*C - A.*L;
                 BL_KC   = B.*L - K.*C;
-                % Compute parmeter that expresses the intersection point along the ray.
+                % Compute parmeter that expresses the intersection point 
+                % along the ray.
                 T       = -(F.*AK_JB + E.*JC_AL + D.*BL_KC)./M;
                 Visible = t0<=T & T<=t1;
                 % Does the intersection point fall inside the triangle? 
                 % 0<gamma<1, 0<beta<1-gamma. 
-                % For efficiency, continue the calculation only with visible points.
+                % Continue the calculation only with visible points.
                 GAMMA           = zeros(nPx, obj.nTri);
                 GAMMA(Visible)  = (I(Visible).*AK_JB(Visible) ...
                                 +  H(Visible).*JC_AL(Visible) ...
@@ -148,36 +152,100 @@ classdef Scene < handle
                                 + K(Visible).*GF_DI(Visible) ...
                                 + L(Visible).*DH_EG(Visible))./M(Visible);
                 Visible         = 0<BETA & BETA<=(1-GAMMA);
-                % Set NaN for invisible points.
+                % Set invisible points to NaN.
                 T(~Visible)      = NaN;
                 % Determine the closest intersection.
                 [Tmin, TriIndex] = min(T,[],2);
                 % Compute the depth coordiante for all sample points.
-                Z = Z + Tmin.*Zd(:); 
+                Z = Z + Tmin.*Zd(:);
+                
                 % *********************************************************
                 % Texture mapping.
                 % *********************************************************
                 U2D = obj.TriU(:,TriIndex);
                 V2D = obj.TriV(:,TriIndex);
                 % Select the corresponding paramters BETA and GAMMA.
-                Index   = sub2ind([nPx obj.nTri], 1:nPx, TriIndex');
-                BETA    = BETA(Index);
-                GAMMA   = GAMMA(Index);
+                SelIndex    = sub2ind([nPx obj.nTri], 1:nPx, TriIndex');
+                BETA        = BETA(SelIndex);
+                GAMMA       = GAMMA(SelIndex);
                 % Compute the coordiantes in texture space.
                 U = U2D(1,:) + (U2D(2,:)-U2D(1,:)).*BETA ...
                              + (U2D(3,:)-U2D(1,:)).*GAMMA;
                 V = V2D(1,:) + (V2D(2,:)-V2D(1,:)).*BETA ...
                              + (V2D(3,:)-V2D(1,:)).*GAMMA;
-                for iPx = 1:nPx,
+                % Work only on pixels that had a hit.
+                VisIndex    = find(~isnan(Tmin));
+                nVisPx      = length(VisIndex);
+                for iVisPx = 1:nVisPx,
+                    iPx = VisIndex(iVisPx);
                     % Get the material and its properties for this triangle.
                     material    = obj.materials(obj.TriMatId(TriIndex(iPx)));
                     TextureImg  = material.TextureImg;
                     nX          = material.nX;
                     nY          = material.nY;
-                    scale       = material.scale;
+                    scale       = material.scale; % scaling of texture
                     Img(iPx, :) = Img(iPx, :) ...
-                        + reshape(TextureImg( 1+mod(floor(scale*V(iPx)*nY),nY), ...
-                                      1+mod(floor(scale*U(iPx)*nX),nX), :),[1 3]);
+                        + reshape(TextureImg( ... % mod wraps circular
+                            1 + mod(floor(scale*V(iPx)*nY), nY), ...
+                            1 + mod(floor(scale*U(iPx)*nX), nX), :),[1 3]);
+                end
+                
+                % *********************************************************
+                % Compute the contribution from all the light sources.
+                % *********************************************************
+                nLight = length(obj.lights);
+                % Given light sources we compute their contribution.
+                if nLight>0,
+                    % Work only on pixels that had a hit.
+                    Vx = xE - X_D(VisIndex); % Ray from intersection to camera.
+                    Vy = yE - Y_D(VisIndex);
+                    Vz = zE - Z_D(VisIndex);
+                    % Compute the intersection. for debug plot figure; plot3(Iz,Ix,Iy,'.')
+                    Ix = Tmin(VisIndex).*X_D(VisIndex) + xE;
+                    Iy = Tmin(VisIndex).*Y_D(VisIndex) + yE;
+                    Iz = Tmin(VisIndex).*Z_D(VisIndex) + zE;
+                    % Get the normal vectors.
+                    Nx = obj.TriN(1,TriIndex(VisIndex))';
+                    Ny = obj.TriN(2,TriIndex(VisIndex))';
+                    Nz = obj.TriN(3,TriIndex(VisIndex))';
+                    % Normalize vectors.
+                    LenV = sqrt( Vx.^2 + Vy.^2 + Vz.^2 );
+                    Vx = Vx./(eps + LenV);
+                    Vy = Vy./(eps + LenV);
+                    Vz = Vz./(eps + LenV);
+                    for iLight = 1:nLight,
+                        light       = obj.lights(iLight);
+                        DiffCoef    = light.DiffCoef;
+                        SpecCoef    = light.SpecCoef;
+                        phongExp    = light.phongExp;
+                        Color       = light.Color;
+                        DiffColor   = repmat(DiffCoef(:)'.*Color(:)',[nVisPx 1]);
+                        SpecColor   = repmat(SpecCoef(:)'.*Color(:)',[nVisPx 1]);
+                        Lx = light.Pos(1) - Ix;
+                        Ly = light.Pos(2) - Iy;
+                        Lz = light.Pos(3) - Iz;
+                        % Normalize vector.
+                        LenL = sqrt( Lx.^2 + Ly.^2 + Lz.^2 );
+                        Lx = Lx./(eps + LenL);
+                        Ly = Ly./(eps + LenL);
+                        Lz = Lz./(eps + LenL);
+                        % Compute h vector.
+                        Hx = Vx + Lx;
+                        Hy = Vy + Ly;
+                        Hz = Vz + Lz;
+                        LenH = sqrt( Hx.^2 + Hy.^2 + Hz.^2 );
+                        Hx = Hx./(eps + LenH);
+                        Hy = Hy./(eps + LenH);
+                        Hz = Hz./(eps + LenH);
+                        % Compute the inner products.
+                        NL = max(0, Nx.*Lx + Ny.*Ly + Nz.*Lz);
+                        NH = max(0, Nx.*Hx + Ny.*Hy + Nz.*Hz);
+                        NL = repmat(NL,[1 3]);
+                        NH = repmat(NH,[1 3]);
+                        Img(VisIndex,:) = Img(VisIndex,:)...
+                                        + DiffColor.*NL ...
+                                        + SpecColor.*NH.^phongExp;
+                    end
                 end
             end
             % Reshape to the size of the screen.

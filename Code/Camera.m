@@ -25,26 +25,28 @@ classdef Camera < handle
     end
     methods
         % Constructor.
-        function obj = Camera(id,typeName,aaCoef)
+        function obj = Camera(id, typeName, aaCoef)
             obj.id          = id;
             obj.typeName    = typeName;
             obj.aaCoef      = aaCoef;
         end
         % Move the camera to the new position Pos.
-        function moveTo(obj,Pos)
+        function moveTo(obj, Pos)
             obj.Pos = Pos;
         end
         % Move the camera from its current position by Shift.
-        function moveBy(obj,Shift)
+        function moveBy(obj, Shift)
             obj.Pos = obj.Pos + Shift;
         end
         % Rotate the camera.
-        function rotate(obj,Rotation)
+        function rotate(obj, Rotation)
             M       = rotationMatrix(Rotation);
             obj.Dir = M*obj.Dir;
             obj.Up  = M*obj.Up;
         end
-        function orient(obj,Dir,Up)
+        % Re-orient camera according to direction and up vector. Note that
+        % we assume both vectors are normalized.
+        function orient(obj, Dir, Up)
             obj.Dir = Dir;
             obj.Up  = Up;
         end
