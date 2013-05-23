@@ -16,8 +16,8 @@ classdef PinholeCamera < Camera
                 warning('Matlab:pinholeCamera', ...
                         'Pixels of this obj are non-square!');
             end
-            obj.Dir     = Dir/norm(Dir);
-            obj.Up      = Up/norm(Dir);
+            obj.Dir     = Dir;
+            obj.Up      = Up;
             obj.Pos     = Pos;
             obj.hFov    = hFov;
             obj.vFov    = vFov;
