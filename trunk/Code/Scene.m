@@ -105,7 +105,7 @@ classdef Scene < handle
             obj.materials   = obj.materials(1:obj.nMat,1);
             obj.objects     = obj.objects(1:obj.nObj,1);
         end
-        function [Img Z] = rayTrace(obj,cameraId)
+        function [Img Z Theta Phi] = rayTrace(obj,cameraId)
             camera = obj.cameras{cameraId};
             % Get the position of the camera.
             xE  = camera.Pos(1);
@@ -122,12 +122,12 @@ classdef Scene < handle
             nAa = camera.nAa;
             Z   = zeros(nPx, 1);
             Img = zeros(nPx, 3);
-            for iAa = 1:nAa,
+            for iAa = nAa:-1:1, % work on (0,0) last
                 % *********************************************************
                 % Ray-triangle intersection.
                 % *********************************************************
-                Xd  = camera.ScreenX(:,iAa); %+ camera.AaX(iAa);
-                Yd  = camera.ScreenY(:,iAa); %+ camera.AaY(iAa);
+                Xd  = camera.ScreenX(:,iAa);
+                Yd  = camera.ScreenY(:,iAa);
                 Zd  = camera.ScreenZ(:,iAa);
                 X_D = Right(1)*Xd + Right(2)*Yd + Right(3)*Zd;
                 Y_D = Up(1)   *Xd + Up(2)   *Yd + Up(3)   *Zd;
@@ -266,6 +266,22 @@ classdef Scene < handle
                                         + SpecColor.*NH.^phongExp;
                     end
                 end
+            end
+            % Compute azimuth and elevation of surface normal in camera 
+            % coordinates.
+            if nargout>2,
+                Phi     = NaN(nPx, 1);
+                Theta   = NaN(nPx, 1);
+                % Get the normal vectors.
+                Nx = -obj.TriN(1,TriIndex(VisIndex))';
+                Ny = -obj.TriN(2,TriIndex(VisIndex))';
+                Nz = -obj.TriN(3,TriIndex(VisIndex))';
+                Theta(VisIndex) = atan2(Nx*Right(1)+Ny*Right(2)+Nz*Right(3),...
+                                        Nx*Dir(1)+Ny*Dir(2)+Nz*Dir(3));
+                Phi(VisIndex)   = atan2(Nx*Up(1)+Ny*Up(2)+Nz*Up(3),...
+                                        Nx*Dir(1)+Ny*Dir(2)+Nz*Dir(3));
+                Phi     = reshape(Phi,  [camera.vPx camera.hPx]);
+                Theta   = reshape(Theta,[camera.vPx camera.hPx]);
             end
             % Reshape to the size of the screen.
             Z   = reshape(Z/nAa,   [camera.vPx camera.hPx]);
