@@ -4,8 +4,6 @@ classdef PinholeCamera < Camera
         xMax    % Maximum horizontal coordiante for screen.
         yMin    % Minimum vertical coordinate for screen.
         yMax    % Maximum vertical coordinate for screen.
-        xDelta  % Horizontal distance between two samples.
-        yDelta  % Vertical distance between two samples.
         f       % Focal length.
     end
     methods
@@ -13,7 +11,7 @@ classdef PinholeCamera < Camera
                 id, Dir, Up, Pos, hFov, vFov, hPx, vPx, aaCoef, Range)
             obj = obj@Camera(id, 'PinholeCamera', aaCoef);
             if hFov/vFov~=hPx/vPx, 
-                warning('Matlab:pinholeCamera', ...
+                warning('Matlab:PinholeCamera', ...
                         'Pixels of this obj are non-square!');
             end
             obj.Dir     = Dir;
@@ -28,25 +26,28 @@ classdef PinholeCamera < Camera
             obj.xMax    = +.5;
             obj.yMin    = -.5 * vFov/hFov;
             obj.yMax    = +.5 * vFov/hFov;
-            obj.xDelta  = 1/hPx;
-            obj.yDelta  = (vFov/hFov)/vPx;
             [Y X]       = ndgrid(-linspace(obj.yMin, obj.yMax, vPx), ...
                                  +linspace(obj.xMin, obj.xMax, hPx));
-            obj.ScreenX = X;
-            obj.ScreenY = Y;
-            obj.ScreenZ = repmat(obj.f, size(X));
             obj.t0      = Range(1); % Min value.
             obj.t1      = Range(2); % Max value.
+            obj.aaCoef  = aaCoef;
+            nPx         = vPx * hPx;
             if aaCoef>2,
                 [AaX AaY]   = rank1Lattice(aaCoef);
-                obj.AaX     = obj.xDelta*AaX; % Anti-aliasing offset.
-                obj.AaY     = obj.yDelta*AaY;
+                nAa         = numel(AaX);
+                obj.ScreenX = repmat(X(:),[1 nAa]) ...
+                            + repmat(1/hPx*AaX(:)',[nPx 1]);
+                obj.ScreenY = repmat(Y(:),[1 nAa]) ...
+                            + repmat((vFov/hFov)/vPx*AaY(:)',[nPx 1]);
+                obj.ScreenZ = repmat(obj.f, [nPx nAa]);
             else
-                obj.AaX = 0;
-                obj.AaY = 0;
+                nAa         = 1;
+                obj.ScreenX = X(:);
+                obj.ScreenY = Y(:);
+                obj.ScreenZ = repmat(obj.f, [nPx 1]);
             end
-            obj.aaCoef  = aaCoef;
-            obj.nAa     = numel(obj.AaX);
+            obj.nAa = nAa;
+            obj.nPx = nPx;
         end
     end
 end

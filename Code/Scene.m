@@ -4,8 +4,12 @@ classdef Scene < handle
     %
     %   Florian Raudies, 05/22/2013, Boston University.
     properties (Constant = true)
-        MAX_TRI_COUNT = 100 % Maximum number of triangles.
-        MAX_VRT_COUNT = 300
+        MAX_TRI_COUNT = 100     % Maximum number of triangles.
+        MAX_VRT_COUNT = 300     % Maximum number of vertices (3 x traingles)
+        MAX_CAM_COUNT = 10      % Maximum number of cameras.
+        MAX_OBJ_COUNT = 100     % Maximum number of objects.
+        MAX_MAT_COUNT = 50      % Maximum number of materials.
+        MAX_LIGHT_COUNT = 10    % Maximum number of lights.
     end
     properties (SetAccess = private)
         Tri         % Matrix with triangles: 9 x nTri
@@ -16,6 +20,10 @@ classdef Scene < handle
         TriA        % Double area of triangles: 1 x nTri
         TriMatId    % Matrial indices for triangles: 1 x nTri
         nTri        % Number of triangles.
+        nObj        % Number of objects.
+        nCam        % Number of cameras.
+        nLight      % Number of lights.
+        nMat        % Number of materials.
     end
     properties 
         objects     % List of objects.
@@ -27,6 +35,10 @@ classdef Scene < handle
         % Constructor
         function obj = Scene()
             obj.nTri        = 0;
+            obj.nObj        = 0;
+            obj.nCam        = 0;
+            obj.nLight      = 0;
+            obj.nMat        = 0;
             obj.Tri         = NaN([9 Scene.MAX_VRT_COUNT]);
             obj.TriN        = NaN([3 Scene.MAX_TRI_COUNT]);
             obj.TriU        = NaN([3 Scene.MAX_TRI_COUNT]);
@@ -34,10 +46,10 @@ classdef Scene < handle
             obj.TriC        = NaN([3 Scene.MAX_TRI_COUNT]);
             obj.TriA        = NaN([1 Scene.MAX_TRI_COUNT]);
             obj.TriMatId    = NaN([1 Scene.MAX_TRI_COUNT]);
-            obj.objects     = []; % initialize as empty list
-            obj.materials   = [];
-            obj.lights      = [];
-            obj.cameras     = [];
+            obj.objects     = cell(Scene.MAX_OBJ_COUNT,  1);
+            obj.materials   = cell(Scene.MAX_MAT_COUNT,  1);
+            obj.lights      = cell(Scene.MAX_LIGHT_COUNT,1);
+            obj.cameras     = cell(Scene.MAX_CAM_COUNT,  1);
         end
         function obj = addObject(obj, object) 
             Triangles               = object.getTriangles();
@@ -53,28 +65,32 @@ classdef Scene < handle
             obj.TriA(:,     Index)  = A;
             obj.TriMatId(:, Index)  = object.materialId;
             obj.nTri                = obj.nTri + numel(Index);
-            obj.objects             = [obj.objects object];
+            obj.nObj                = obj.nObj + 1;
+            obj.objects{obj.nObj}   = object;
         end
         function addMaterial(obj, material)
-            obj.materials = [obj.materials material];
+            obj.nMat                = obj.nMat + 1;
+            obj.materials{obj.nMat} = material;
         end
         function addLight(obj, light)
-            obj.lights = [obj.lights light];
+            obj.nLight              = obj.nLight + 1;
+            obj.lights{obj.nLight}  = light;
         end
         function addCamera(obj, camera)
-            obj.cameras = [obj.cameras camera];
+            obj.nCam                = obj.nCam + 1;
+            obj.cameras{obj.nCam}   = camera;
         end
         function moveCameraTo(obj,cameraId,Pos)
-            obj.cameras(cameraId).moveTo(Pos);
+            obj.cameras{cameraId}.moveTo(Pos);
         end
         function moveCameraBy(obj,cameraId,Shift)
-            obj.cameras(cameraId).moveBy(Shift);
+            obj.cameras{cameraId}.moveBy(Shift);
         end
         function rotateCamera(obj,cameraId,Rotation)
-            obj.cameras(cameraId).rotate(Rotation); 
+            obj.cameras{cameraId}.rotate(Rotation); 
         end
         function orientCamera(obj,cameraId,Dir,Up)
-            obj.cameras(cameraId).orient(Dir, Up);
+            obj.cameras{cameraId}.orient(Dir, Up);
         end
         function initialize(obj)
             obj.Tri   = obj.Tri(:,1:obj.nTri);
@@ -83,23 +99,26 @@ classdef Scene < handle
             obj.TriV  = obj.TriV(:,1:obj.nTri);
             obj.TriC  = obj.TriC(:,1:obj.nTri);
             obj.TriA  = obj.TriA(:,1:obj.nTri);
-            obj.TriMatId = obj.TriMatId(:,1:obj.nTri);            
+            obj.TriMatId    = obj.TriMatId(:,1:obj.nTri);
+            obj.cameras     = obj.cameras(1:obj.nCam,1);
+            obj.lights      = obj.lights(1:obj.nLight,1);
+            obj.materials   = obj.materials(1:obj.nMat,1);
+            obj.objects     = obj.objects(1:obj.nObj,1);
         end
         function [Img Z] = rayTrace(obj,cameraId)
-            camera = obj.cameras(cameraId);
+            camera = obj.cameras{cameraId};
             % Get the position of the camera.
             xE  = camera.Pos(1);
             yE  = camera.Pos(2);
             zE  = camera.Pos(3);
             % Get the image surface with reference to position.
-            Zd      = camera.ScreenZ;
             Dir     = camera.Dir;
             Up      = camera.Up;
             Right   = cross(Dir(1:3), Up(1:3));
             % Range of visiblity.
             t0  = camera.t0;
             t1  = camera.t1;
-            nPx = numel(Zd);
+            nPx = camera.nPx;
             nAa = camera.nAa;
             Z   = zeros(nPx, 1);
             Img = zeros(nPx, 3);
@@ -107,8 +126,9 @@ classdef Scene < handle
                 % *********************************************************
                 % Ray-triangle intersection.
                 % *********************************************************
-                Xd  = camera.ScreenX + camera.AaX(iAa);
-                Yd  = camera.ScreenY + camera.AaY(iAa);
+                Xd  = camera.ScreenX(:,iAa); %+ camera.AaX(iAa);
+                Yd  = camera.ScreenY(:,iAa); %+ camera.AaY(iAa);
+                Zd  = camera.ScreenZ(:,iAa);
                 X_D = Right(1)*Xd + Right(2)*Yd + Right(3)*Zd;
                 Y_D = Up(1)   *Xd + Up(2)   *Yd + Up(3)   *Zd;
                 Z_D = Dir(1)  *Xd + Dir(2)  *Yd + Dir(3)  *Zd;
@@ -179,7 +199,7 @@ classdef Scene < handle
                 for iVisPx = 1:nVisPx,
                     iPx = VisIndex(iVisPx);
                     % Get the material and its properties for this triangle.
-                    material    = obj.materials(obj.TriMatId(TriIndex(iPx)));
+                    material    = obj.materials{obj.TriMatId(TriIndex(iPx))};
                     TextureImg  = material.TextureImg;
                     nX          = material.nX;
                     nY          = material.nY;
@@ -193,9 +213,8 @@ classdef Scene < handle
                 % *********************************************************
                 % Compute the contribution from all the light sources.
                 % *********************************************************
-                nLight = length(obj.lights);
                 % Given light sources we compute their contribution.
-                if nLight>0,
+                if obj.nLight>0,
                     % Work only on pixels that had a hit.
                     Vx = xE - X_D(VisIndex); % Ray from intersection to camera.
                     Vy = yE - Y_D(VisIndex);
@@ -213,8 +232,8 @@ classdef Scene < handle
                     Vx = Vx./(eps + LenV);
                     Vy = Vy./(eps + LenV);
                     Vz = Vz./(eps + LenV);
-                    for iLight = 1:nLight,
-                        light       = obj.lights(iLight);
+                    for iLight = 1:obj.nLight,
+                        light       = obj.lights{iLight};
                         DiffCoef    = light.DiffCoef;
                         SpecCoef    = light.SpecCoef;
                         phongExp    = light.phongExp;
@@ -249,8 +268,8 @@ classdef Scene < handle
                 end
             end
             % Reshape to the size of the screen.
-            Z   = reshape(Z/nAa,    size(Xd));
-            Img = reshape(Img/nAa, [size(Xd) 3]);
+            Z   = reshape(Z/nAa,   [camera.vPx camera.hPx]);
+            Img = reshape(Img/nAa, [camera.vPx camera.hPx 3]);
         end
     end
 end

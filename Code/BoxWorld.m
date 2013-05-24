@@ -28,15 +28,6 @@ l = 200;    % cm length of box
 h = 150;    % cm height of box
 
 % *************************************************************************
-% Pinhole Camera
-% *************************************************************************
-hFov    = 80/180*pi;
-vFov    = 80/180*pi;
-hPx     = 50;
-vPx     = 50;
-aaCoef  = 5; % Anti-aliasing with the Fibonacci number of aaCoef samples.
-
-% *************************************************************************
 % Construct a box scene from five planes, one texture, and one camera.
 % *************************************************************************
 scene       = Scene;
@@ -57,31 +48,34 @@ scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2));
 scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2));
 % Add pinhole camera.
 scene.addCamera(PinholeCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
-                                hFov,vFov,hPx,vPx,aaCoef,[0 10^3]));
+                                80/180*pi,80/180*pi,50,50,5,[0 10^3]));
+scene.addCamera(SphericalCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
+                                240/180*pi,80/180*pi,75,25,5,[0 10^3]));
 % Add light sources.
-scene.addLight(Light(1,[80; 100; 0; 0],[50 20 210],[1 0.5 .5],[1 1 1],10^3));
+% scene.addLight(Light(1,[80; 100; 0; 0],[50 20 210],[1 0.5 .5],[1 1 1],10^3));
 scene.initialize();
 % scene.rotateCamera(1,[0 pi/4 0]);
 
+cameraId = 2;
+
 figure;
 for iStep = 1:nStep,
-    scene.moveCameraTo(1,Pos(:,iStep));
-    scene.orientCamera(1,Dir(:,iStep),Up(:,iStep));    
+    scene.moveCameraTo(cameraId,Pos(:,iStep));
+    scene.orientCamera(cameraId,Dir(:,iStep),Up(:,iStep));    
     % *********************************************************************
     % Ray trace to generate the image and depth map (zBuffer).
     % *********************************************************************
-    [Img Z] = scene.rayTrace(1); % cameraId is one.
+    [Img Z] = scene.rayTrace(cameraId); % cameraId is one.
     % *********************************************************************
     % Display the depth map and image.
     % *********************************************************************
-    subplot(1,2,1); 
-        imshow(log(Z),[0 log(200)], 'XData',scene.cameras(1).ScreenX(1,:), ...
-                                    'YData',scene.cameras(1).ScreenY(:,1));
-        axis xy;
+    subplot(2,1,1); 
+        imshow(log(Z),[0 log(200)]);
+        axis ij;
         colormap(flipud(gray));
         title('Depth map (zBuffer)','FontSize',TITLE_SIZE);
-    subplot(1,2,2);
-        image(Img/max(Img(:))); axis off square;
-        title(sprintf('Image %d x %d pixels',hPx,vPx),'FontSize',TITLE_SIZE);
+    subplot(2,1,2);
+        image(Img/max(Img(:))); axis off equal;
+        title('Image','FontSize',TITLE_SIZE);
     drawnow;
 end

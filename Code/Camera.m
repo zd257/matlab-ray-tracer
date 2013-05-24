@@ -10,17 +10,16 @@ classdef Camera < handle
         Dir         % Dir vector of the camera.
         Up          % Up vector of the camera.
         ScreenX     % Screen X, with respect to Pos and Dir, Up.
-        ScreenY     % Screen Y.
+        ScreenY     % Screen Y, dimensions: nPx x nAa.
         ScreenZ     % Screen Z.
         hFov        % Angle for horizontal field of view.
         vFov        % Angle for vertical field of view.
         hPx         % Pixels in horizontal domain.
         vPx         % Pixels in vertical domain.
+        nPx         % Total number of pixels.
         t0          % Minimum ray length.
         t1          % Maximum ray length.
         aaCoef      % Anti-aliasing coefficient.
-        AaX         % Anti-aliasing horizontal offset to ScreenX.
-        AaY         % Anti-aliasing vertical offset to ScreenY.
         nAa         % Number of anti-aliasing samples.
     end
     methods
