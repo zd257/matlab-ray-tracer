@@ -70,7 +70,7 @@ for iStep = 1:nStep,
     % Display the depth map and image.
     % *********************************************************************
     subplot(2,1,1); 
-        imshow(log(Z),[0 log(200)]);
+        imshow(Z,[]);
         axis ij;
         colormap(flipud(gray));
         title('Depth map (zBuffer)','FontSize',TITLE_SIZE);
