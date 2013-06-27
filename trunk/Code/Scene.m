@@ -204,9 +204,10 @@ classdef Scene < handle
                     nX          = material.nX;
                     nY          = material.nY;
                     scale       = material.scale; % scaling of texture
+                    ratio       = material.ratio;
                     Img(iPx, :) = Img(iPx, :) ...
                         + reshape(TextureImg( ... % mod wraps circular
-                            1 + mod(floor(scale*V(iPx)*nY), nY), ...
+                            1 + mod(floor(scale*ratio*V(iPx)*nY), nY), ...
                             1 + mod(floor(scale*U(iPx)*nX), nX), :),[1 3]);
                 end
                 
