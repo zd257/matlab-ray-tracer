@@ -43,9 +43,9 @@ scene.addObject(RightWall);
 scene.addObject(TopWall);
 scene.addObject(DownWall);
 % Add materials.
-scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3));
-scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2));
-scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2));
+scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3,1));
+scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2,20/15));
+scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2,20/15));
 % Add pinhole camera.
 scene.addCamera(PinholeCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
                                 80/180*pi,80/180*pi,50,50,5,[0 10^3]));
@@ -61,7 +61,7 @@ cameraId = 2;
 figure;
 for iStep = 1:nStep,
     scene.moveCameraTo(cameraId,Pos(:,iStep));
-    scene.orientCamera(cameraId,Dir(:,iStep),Up(:,iStep));    
+    scene.orientCamera(cameraId,Dir(:,iStep),Up(:,iStep));
     % *********************************************************************
     % Ray trace to generate the image and depth map (zBuffer).
     % *********************************************************************

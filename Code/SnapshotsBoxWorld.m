@@ -32,9 +32,9 @@ scene.addObject(RightWall);
 scene.addObject(TopWall);
 scene.addObject(DownWall);
 % Add materials.
-scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3));
-scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2));
-scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2));
+scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3,1));
+scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2,20/15));
+scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2,20/15));
 % Add pinhole camera.
 scene.addCamera(PinholeCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
                                 80/180*pi,80/180*pi,150,150,5,[0 10^3]));
@@ -44,7 +44,7 @@ scene.addLight(Light(1,[-80; 50; 0; 0],[50 20 210],[1 0.5 .5],[1 1 1],10^3));
 scene.initialize();
 
 view.Point  = [50 20 -30 0];
-M           = rotationMatrix([0 325/180*pi 0]);
+M           = rotationMatrix([0 0 0]); %rotationMatrix([0 325/180*pi 0]);
 view.Dir    = M*[0 0 1 0]';
 view.Up     = M*[0 1 0 0]';
 
