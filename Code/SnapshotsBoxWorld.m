@@ -6,7 +6,7 @@ close all
 % *************************************************************************
 % A simple box world to test the camera models, texture mapping, and light
 % model within the ray-tracer.
-%   Florian Raudies, 06/10/2013, Boston University.
+%   Florian Raudies, 07/02/2013, Boston University.
 % *************************************************************************
 
 % *************************************************************************
@@ -19,22 +19,7 @@ h = 150;    % cm height of box
 % *************************************************************************
 % Construct a box scene from five planes, one texture, and one camera.
 % *************************************************************************
-scene       = Scene;
-GroundPlane = Plane(1,1,[-w/2; 0; +l/2],[-w/2; 0; -l/2],[+w/2; 0; -l/2]);
-LeftWall    = Plane(2,3,[-w/2; 0; +l/2],[-w/2; h; +l/2],[-w/2; h; -l/2]);
-RightWall   = Plane(3,2,[+w/2; 0; +l/2],[+w/2; 0; -l/2],[+w/2; h; -l/2]);
-TopWall     = Plane(4,2,[-w/2; 0; +l/2],[+w/2; 0; +l/2],[+w/2; h; +l/2]);
-DownWall    = Plane(5,2,[-w/2; 0; -l/2],[-w/2; h; -l/2],[+w/2; h; -l/2]);
-% Add primitives.
-scene.addObject(GroundPlane);
-scene.addObject(LeftWall);
-scene.addObject(RightWall);
-scene.addObject(TopWall);
-scene.addObject(DownWall);
-% Add materials.
-scene.addMaterial(Texture2D(1,'../Textures/Checkerboard.png',3,1));
-scene.addMaterial(Texture2D(2,'../Textures/DotPattern.png',2,20/15));
-scene.addMaterial(Texture2D(3,'../Textures/ColorDotPattern.png',2,20/15));
+scene   = BoxWorld(w,l,h);
 % Add pinhole camera.
 scene.addCamera(PinholeCamera(1,[0;0;1;0],[0;1;0;0],[0;20;-80;0],...
                                 80/180*pi,80/180*pi,150,150,5,[0 10^3]));

@@ -4,11 +4,11 @@ classdef Scene < handle
     %
     %   Florian Raudies, 05/22/2013, Boston University.
     properties (Constant = true)
-        MAX_TRI_COUNT = 100     % Maximum number of triangles.
-        MAX_VRT_COUNT = 300     % Maximum number of vertices (3 x traingles)
-        MAX_CAM_COUNT = 10      % Maximum number of cameras.
-        MAX_OBJ_COUNT = 100     % Maximum number of objects.
-        MAX_MAT_COUNT = 50      % Maximum number of materials.
+        MAX_TRI_COUNT   = 100   % Maximum number of triangles.
+        MAX_VRT_COUNT   = 300   % Maximum number of vertices (3 x traingles)
+        MAX_CAM_COUNT   = 10    % Maximum number of cameras.
+        MAX_OBJ_COUNT   = 100   % Maximum number of objects.
+        MAX_MAT_COUNT   = 50    % Maximum number of materials.
         MAX_LIGHT_COUNT = 10    % Maximum number of lights.
     end
     properties (SetAccess = private)
@@ -93,12 +93,12 @@ classdef Scene < handle
             obj.cameras{cameraId}.orient(Dir, Up);
         end
         function initialize(obj)
-            obj.Tri   = obj.Tri(:,1:obj.nTri);
-            obj.TriN  = obj.TriN(:,1:obj.nTri);
-            obj.TriU  = obj.TriU(:,1:obj.nTri);
-            obj.TriV  = obj.TriV(:,1:obj.nTri);
-            obj.TriC  = obj.TriC(:,1:obj.nTri);
-            obj.TriA  = obj.TriA(:,1:obj.nTri);
+            obj.Tri         = obj.Tri(:,1:obj.nTri);
+            obj.TriN        = obj.TriN(:,1:obj.nTri);
+            obj.TriU        = obj.TriU(:,1:obj.nTri);
+            obj.TriV        = obj.TriV(:,1:obj.nTri);
+            obj.TriC        = obj.TriC(:,1:obj.nTri);
+            obj.TriA        = obj.TriA(:,1:obj.nTri);
             obj.TriMatId    = obj.TriMatId(:,1:obj.nTri);
             obj.cameras     = obj.cameras(1:obj.nCam,1);
             obj.lights      = obj.lights(1:obj.nLight,1);
