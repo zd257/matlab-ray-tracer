@@ -82,6 +82,9 @@ Filename    = texture.Filename;
 Scale       = texture.Scale;
 Ratio       = texture.Ratio;
 nTxt        = length(Scale);
+if nTxt~=length(Filename) || nTxt~=length(Ratio),
+    warning('Matlab:Argument','Either not enough filenames, scale, or ratio items provided!');
+end
 for iTxt = 1:nTxt,
     scene.addMaterial(...
         Texture2D(1,[filepath,Filename{iTxt}],Scale(iTxt),Ratio(iTxt)));
