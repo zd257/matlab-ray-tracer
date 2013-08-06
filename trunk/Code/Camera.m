@@ -29,6 +29,14 @@ classdef Camera < handle
             obj.typeName    = typeName;
             obj.aaCoef      = aaCoef;
         end
+        % Get the number of horizontal pixels.
+        function px = getHorizontalPx(obj)
+            px = obj.hPx;
+        end
+        % Get the number of vertical pixels.
+        function px = getVerticalPx(obj)
+            px = obj.vPx;
+        end
         % Move the camera to the new position Pos.
         function moveTo(obj, Pos)
             obj.Pos = Pos;
