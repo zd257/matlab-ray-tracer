@@ -105,7 +105,7 @@ classdef Scene < handle
             obj.materials   = obj.materials(1:obj.nMat,1);
             obj.objects     = obj.objects(1:obj.nObj,1);
         end
-        function [Img Z Theta Phi] = rayTrace(obj,cameraId)
+        function [Img Z Len Theta Phi] = rayTrace(obj,cameraId)
             camera = obj.cameras{cameraId};
             % Get the position of the camera.
             xE  = camera.Pos(1);
@@ -121,6 +121,7 @@ classdef Scene < handle
             nPx = camera.nPx;
             nAa = camera.nAa;
             Z   = zeros(nPx, 1);
+            Len = zeros(nPx, 1);
             Img = zeros(nPx, 3);
             for iAa = nAa:-1:1, % work on (0,0) last
                 % *********************************************************
@@ -178,6 +179,7 @@ classdef Scene < handle
                 [Tmin, TriIndex] = min(T,[],2);
                 % Compute the depth coordiante for all sample points.
                 Z = Z + Tmin.*Zd(:);
+                Len = Len + Tmin;
                 
                 % *********************************************************
                 % Texture mapping.
@@ -286,6 +288,7 @@ classdef Scene < handle
             end
             % Reshape to the size of the screen.
             Z   = reshape(Z/nAa,   [camera.vPx camera.hPx]);
+            Len = reshape(Len/nAa, [camera.vPx camera.hPx]);
             Img = reshape(Img/nAa, [camera.vPx camera.hPx 3]);
         end
     end
