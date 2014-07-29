@@ -10,7 +10,7 @@ classdef PinholeCamera < Camera
         function obj = PinholeCamera(...
                 id, Dir, Up, Pos, hFov, vFov, hPx, vPx, aaCoef, Range)
             obj = obj@Camera(id, 'PinholeCamera', aaCoef);
-            if hFov/vFov~=hPx/vPx, 
+            if abs(hFov/vFov-hPx/vPx) > eps,
                 warning('Matlab:PinholeCamera', ...
                         'Pixels of this obj are non-square!');
             end
@@ -48,6 +48,10 @@ classdef PinholeCamera < Camera
             end
             obj.nAa = nAa;
             obj.nPx = nPx;
+        end
+        function [X Y] = getScreenXY(obj)
+            X = reshape(obj.ScreenX(:,1),[obj.vPx obj.hPx]);
+            Y = reshape(obj.ScreenY(:,1),[obj.vPx obj.hPx]);
         end
     end
 end
