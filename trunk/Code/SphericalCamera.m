@@ -24,7 +24,7 @@ classdef SphericalCamera < Camera
             obj.Pos     = Pos;
             obj.hFov    = hFov;
             obj.vFov    = vFov;
-            [Th Ph]     = ndgrid(-linspace(-vFov/2,+vFov/2,vPx), ...
+            [Ph Th]     = ndgrid(-linspace(-vFov/2,+vFov/2,vPx), ...
                                  +linspace(-hFov/2,+hFov/2,hPx));
             obj.t0      = Range(1); % Min value.
             obj.t1      = Range(2); % Max value.
